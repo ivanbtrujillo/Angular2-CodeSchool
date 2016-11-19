@@ -80,3 +80,17 @@ At the end of the module we write the following code to render the component as 
 platformBrowserDynamic().bootstrapModule(AppModule);
 ```
 
+## Directives
+
+A directive (within Angular) is how we add dynamic behavior to HTML. There are three diferent
+kinds of directives:
+
+* Component: has a template.
+* Structural: Alters layout by adding, removing or replacing HTML elements.
+For example: *ngFor
+* Attribute
+
+## Pipes
+
+A pipe takes in data as input and transforms it to a desired output.
+For example: | uppercase, | lowercase , | decimal ...
