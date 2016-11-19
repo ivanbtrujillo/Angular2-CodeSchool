@@ -208,3 +208,233 @@ ngOnInit(){
 
 ngOnInit its invoked after the component is constructed and is the best place to initialize property values.
 
+# Property & Class Binding
+
+Not having to work with more complex HTML has been nice as we've learned Angular,
+but now we're going to implement a better design.
+
+When using a web framework like Angular that abstracts your code from HTML, there
+are a few different ways that data can flow:
+* Javascript to HTML
+* HTML to Javascript
+* Both ways
+
+## Adding images to our model
+We will add this property to our model, add new files and add them to our mock data.
+
+We could try adding our image onto our page using interpolation {{carPart.image}} (this will work fine), but
+there's an alternative syntax we can use when we want to set DOM element property values.
+This is property binding, and allows us to glue component properties to DOM element properties.
+```
+<img [src]="carPart.image">
+```
+The square brackets tell Angular to set this DOM element property to our component property, and if the
+component property changes, update this.
+
+To add additional properties, we need to add brackets and specify a component property. For example:
+```
+<div [hidden]="!user.isAdmin">secret</div>
+<button [disabled]="isDisabled">Purchase</div>
+<img [alt]="image.description" [src]="carPart.image" >
+
+To add a class to our component, we can use brackets too.
+If carPart.featured is true, then the featured class is added. If carPart.featured is false, then the featured
+class is removed.
+
+```
+<li *ngFor="let carPart of carParts" [class.featured] ="carPart.featured">
+    ....
+</li>
+```
+
+## DOM Events
+
+To send a DOM event (mouseover, blur, click) to our component, we just need to create inside our
+component class the method that we want to invoke. Then, inside our html, any standard DOM event
+can be listened for by wrapping it in parentheses and removing the "on" at the beginning of the word.
+```
+<div (mouseover)="call()">
+<input (blur)="call()">
+<form (submit)="call()">
+```
+
+Sometimes you need additional event data, like which key is pressed or where the mouse is on the screen.
+This is what the Angular event object is for.
+```
+<input type="text" (keydown)="showKey($event)">
+```
+We can send the $event object into our methods.
+```
+showKey(event){
+  console.log(event.clentX + "," + event.clientY);
+}
+```
+
+We could also call event.preventDefault(); to prevent a clicked link form being followed or a form from
+being submitted.
+
+## Keeping things in sync using two way data binding
+
+First we need to import the FormsModule inside main.ts:
+```
+import { FormsModule } from '@angular/forms';
+```
+And then, add it into our imports array:
+```
+  imports: [ BrowserModule, FormsModule ],
+```
+
+To make a two data binding into our HTML, we will use a syntax called "banana in a box":
+```
+  <input class="number" type="text" [(ngModel)]="carPart.quantity">
+```
+
+# Services
+
+Using mocks of data isn't the best method. We'd need to import the mocks on every file that
+needs the data. If the way we access this data changes, we'd have to change it everywhere.
+
+It's not easy to switch between real and mock data.
+
+This sort of data loading is best left to service clases.
+
+Services are used to organize and share code across your app, and they're usually
+where we create our data access methods.
+
+First, let's create the simplest service and then we'll learn something called
+dependency injection to make it even more powerful.
+
+Create a racing-data.service.ts file with the following content:
+```
+import { CARPARTS } from './mocks';
+
+export class RacingDataService {
+  getCarParts() {
+    return CARPARTS;
+  }
+}
+```
+On our car-parts.component.ts we need to import this service and then, inside our ngOnInit
+method we create an instance of the service and call this getCarParts method.
+
+```
+import { RacingDataService } from './racing-data.service';
+ngOnInit(){
+  let racingDataService = new RacingDataService();
+  this.carParts = racingDataService.getCarParts();
+}
+```
+
+This works, but:
+* Classes using this service must know how to create a RacingDataService.
+* We'll be creating a new RacingDataService every time we need to fetch car parts.
+* It'll be harder to switch between a mock service and a real one.
+
+## Introducing Dependency Injection
+
+When you run an Angular 2 app, it creates a dependency injector. An injector is in charge
+of knowing how to create and send things.
+The injector knows how to inject our dependencies. If the injector already created a service, we can have it resend
+the same service.
+We must tell the injector what it can inject by registering "providers" with it.
+* Add the inkectable decorator to RacingDataService.
+* Let our injector know about our service by naming its as a provider.
+* Inject the dependency into our car-parts.component.ts
+
+1. Into our racing-data.service.ts, import Injectable and add the Injectable decorator:
+```
+import { Injectable } from '@angular/core';
+
+@Injectable()
+export class RacingDataService { ... }
+```
+
+2. We want all our subcomponents to have access to RacingDataService. To do this, we register it as
+a provider at the top level (main.ts, providers array):
+```
+import { RacingDataService } from './racing-data.service';
+
+providers: [ RacingDataService ]
+```
+3. We need to inject the dependency into our car-parts.component:
+```
+import { RacingDataService } from './racing-data.service';
+
+export class CarPartsComponent {
+ ...
+ constructor( private racingDataService: RacingDataService ){ }
+
+}
+```
+
+4. To use the service, we just need to write it inside ngOnInit:
+```
+ngOnInit() {
+  this.carParts = this.racingDataService.getCarParts();
+}
+```
+Now our app is more scalable and testable:
+* Scalable because our dependencies aren't strongly tied to our classes.
+* Testable because it'd be easy to mock services when we test the component.
+
+## Http
+
+First, we need to create a JSON data file to load from our service (car-parts.json).
+
+The http library provides the get call we will use to call across the internet.
+The RXJS library stands for Reactive Extensions and provides some advance tooling for
+our http calls.
+
+To inject the Http service, we need to import the HttpModule in main.ts and add it into
+the imports array:
+```
+import { HttpModule } from '@angular/http';
+
+imports: [ BrowserModule, FormsModule, HttpModule ]
+```
+
+Then, we need to add Http and rxjs map into our service:
+
+```
+import { Http } from '@angular/http';
+import 'rxjs/add/operator/map';
+```
+After that, we add a constructor inside the service class to create an instance of Http:
+```
+constructor (private http: Http ) { }
+```
+
+And finally, inside getCarParts we make an http request to fetch the data:
+```
+getCarParts() {
+  return this.http.get('app/car-parts.json')
+    .map(response => <CarPart[]>response.json().data);
+}
+```
+
+Since our service now returns an observable object, we need to subscribe to that data stream and
+tell our component what to do when our data arrives.
+
+```
+ngOnInit(){
+  this.racingDataService.getCarParts()
+    .subscribe(carParts => this.carParts = carParts);
+}
+```
+
+Finaly, we need to fix our car-parts component to only iterate into an array after
+we get the data from internet:
+```
+totalCarParts(){
+    let sum = 0;
+    if(Array.isArray(this.carParts)){
+      for (let carPart of this.carParts){
+        sum += carPart.inStock;
+      }
+    }
+    return sum;
+  }
+```
+
+TODO:
+Add error handling and testing.
