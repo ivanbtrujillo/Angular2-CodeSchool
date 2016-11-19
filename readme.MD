@@ -55,7 +55,7 @@ Decorators is TypeScript feature.
   selector: 'my-app',
   template: '<h1>Ultra Racing</h1>'
 })
-``
+```
 
 The component **selector** is the CSS selector for the HTML element where
 we want the component to lead.
