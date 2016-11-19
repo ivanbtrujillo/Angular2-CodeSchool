@@ -9,22 +9,18 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 var core_1 = require('@angular/core');
-var platform_browser_1 = require('@angular/platform-browser');
-var platform_browser_dynamic_1 = require('@angular/platform-browser-dynamic');
-var app_component_1 = require('./app.component');
-var car_parts_component_1 = require('./car-parts.component');
-var AppModule = (function () {
-    function AppModule() {
+var AppComponent = (function () {
+    function AppComponent() {
+        this.title = 'Ultra Racing';
     }
-    AppModule = __decorate([
-        core_1.NgModule({
-            declarations: [app_component_1.AppComponent, car_parts_component_1.CarPartsComponent],
-            imports: [platform_browser_1.BrowserModule],
-            bootstrap: [app_component_1.AppComponent]
+    AppComponent = __decorate([
+        core_1.Component({
+            selector: 'my-app',
+            template: "\n    <h1>{{title}}</h1>\n    <car-parts></car-parts>\n  "
         }), 
         __metadata('design:paramtypes', [])
-    ], AppModule);
-    return AppModule;
+    ], AppComponent);
+    return AppComponent;
 }());
-platform_browser_dynamic_1.platformBrowserDynamic().bootstrapModule(AppModule);
-//# sourceMappingURL=main.js.map
+exports.AppComponent = AppComponent;
+//# sourceMappingURL=app.component.js.map
